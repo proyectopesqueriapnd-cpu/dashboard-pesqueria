@@ -1,5 +1,9 @@
-# Control Proyecto Pesquería V4 Profesional
+# Control Proyecto Pesquería V4 Premium
 
-Módulos independientes GENERAL y BACKLOG PT.
-
-Incluye normalizador para BACKLOG PT cuando la fila 1 es título y la fila 2 contiene encabezados.
+Incluye:
+- GENERAL
+- BACKLOG PT
+- Top 10 Ubicaciones con mayor Backlog
+- Clic en barra para filtrar tabla
+- Búsqueda global
+- Exportación CSV

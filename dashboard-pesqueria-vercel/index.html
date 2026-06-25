@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Control Proyecto Pesquería V4 Profesional</title>
+  <title>Control Proyecto Pesquería V4 Premium</title>
   <meta name="description" content="Dashboard profesional modular para GENERAL y BACKLOG PT." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,7 +17,7 @@
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <div class="brand-icon">CP</div>
-        <div><h1>Control Proyecto</h1><p>Pesquería · V4 Profesional</p></div>
+        <div><h1>Control Proyecto</h1><p>Pesquería · V4 Premium</p></div>
       </div>
       <nav class="nav">
         <div class="nav-title">Módulos</div>
@@ -25,29 +25,42 @@
         <button class="nav-link" data-module="backlog"><i data-lucide="bar-chart-3"></i><span>BACKLOG PT</span></button>
         <div class="nav-title">Acciones</div>
         <button class="nav-link" id="refreshBtn"><i data-lucide="refresh-cw"></i><span>Actualizar</span></button>
+        <button class="nav-link" id="exportCsvBtn"><i data-lucide="download"></i><span>Exportar CSV</span></button>
       </nav>
-      <div class="sidebar-footer"><strong>V4 Profesional</strong><span>Vercel + Apps Script</span></div>
+      <div class="sidebar-footer"><strong>V4 Premium</strong><span>Vercel + Apps Script</span></div>
     </aside>
+
     <div class="mobile-overlay" id="mobileOverlay"></div>
+
     <main class="main">
       <header class="topbar">
         <button class="hamburger" id="hamburger" aria-label="Abrir menú"><i data-lucide="menu"></i></button>
         <div class="topbar-title"><h2 id="moduleTitle">GENERAL</h2><p id="moduleSubtitle">Cargando datos...</p></div>
         <div class="topbar-status"><span class="pill" id="loadPill">Inicializando</span></div>
       </header>
+
       <section class="filters-card">
         <div class="filters-head">
           <div><h3 id="filtersTitle">Filtros</h3><p id="filtersSubtitle">Filtros independientes por módulo</p></div>
-          <button class="secondary-btn" id="clearFiltersBtn"><i data-lucide="eraser"></i>Limpiar filtros</button>
+          <div class="filter-actions">
+            <div class="search-box">
+              <i data-lucide="search"></i>
+              <input id="globalSearch" type="search" placeholder="Buscar en tabla..." />
+            </div>
+            <button class="secondary-btn" id="clearFiltersBtn"><i data-lucide="eraser"></i>Limpiar filtros</button>
+          </div>
         </div>
         <div class="filters-grid" id="filtersGrid"></div>
       </section>
+
       <section class="progress-card" id="progressCard">
         <div class="progress-info"><span id="progressText">Preparando carga...</span><span id="progressPct">0%</span></div>
         <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
       </section>
+
       <section class="kpi-grid" id="kpiGrid"></section>
       <section class="content-grid" id="chartsGrid"></section>
+
       <section class="table-card">
         <div class="card-head">
           <div><h3 id="tableTitle">Tabla detallada</h3><p id="tableSubtitle">Primeros 500 registros visibles</p></div>
@@ -59,6 +72,7 @@
       </section>
     </main>
   </div>
+
   <script src="./js/config.js"></script>
   <script src="./js/api.js"></script>
   <script src="./js/utils.js"></script>

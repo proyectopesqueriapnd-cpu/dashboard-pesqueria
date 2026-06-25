@@ -67,6 +67,23 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;background:va
 .empty{display:flex;align-items:center;justify-content:center;min-height:260px;color:var(--light);font-weight:800;text-align:center}
 @media(max-width:767px){.sidebar{transform:translateX(-100%);transition:.3s}.sidebar.open{transform:translateX(0)}.main{margin-left:0}.hamburger{display:flex}.overlay.active{display:block}.header{padding:12px 16px}.filters{width:100%;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.container{padding:16px}.kpi-grid{grid-template-columns:repeat(2,1fr);gap:12px}.grid{grid-template-columns:1fr;gap:16px}.card.full{grid-column:auto}}
 @media(min-width:768px) and (max-width:1023px){.sidebar{transform:translateX(-100%);transition:.3s}.sidebar.open{transform:translateX(0)}.main{margin-left:0}.hamburger{display:flex}.overlay.active{display:block}.kpi-grid{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}}
+.card-body{
+  min-height: 260px;
+}
+
+#chartStatus{
+  max-height: 260px !important;
+}
+
+#chartPlanta,
+#chartAreas,
+#chartAreaRanking,
+#chartEjecutantes,
+#chartStatusPlanta,
+#chartStatusEjecutante,
+#chartFechas{
+  max-height: 320px !important;
+}
 </style>
 </head>
 
@@ -277,7 +294,7 @@ function renderKPIs(){
 function renderStatus(){
   const dist=countBy(filteredRows,r=>getVal(r,COL.statusPT)); if(!dist.length)return;
   document.getElementById('statusBadge').textContent=`${dist.length} status`;
-  destroy('chartStatus');charts.chartStatus=new Chart(document.getElementById('chartStatus'),{type:'doughnut',data:{labels:dist.map(d=>statusLabel(d.value)),datasets:[{data:dist.map(d=>d.count),backgroundColor:colors(dist.length),borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.raw)}`}}}}});
+  destroy('chartStatus');charts.chartStatus=new Chart(document.getElementById('chartStatus'),{type:'doughnut',data:{labels:dist.map(d=>statusLabel(d.value)),datasets:[{data:dist.map(d=>d.count),backgroundColor:colors(dist.length),borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:true,cutout:'58%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.raw)}`}}}}});
 }
 
 function renderStatusPlanta(){

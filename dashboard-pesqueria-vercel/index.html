@@ -184,7 +184,7 @@ async function fetchAllRead(cfg){
     totalPages=Number(read.total_pages||1);
     (read.data||[]).forEach(r=>{const row={...r,_sheet:cfg.name};Object.keys(row).forEach(k=>cols.add(k));all.push(row)});
     page++;
-  }while(page<=totalPages && page<=20);
+  }while(page<=totalPages && page<=3);
   return {rows:all,cols};
 }
 

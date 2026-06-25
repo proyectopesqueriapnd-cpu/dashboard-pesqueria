@@ -1,0 +1,267 @@
+const App = (() => {
+  const state = {
+    active: 'general',
+    modules: {
+      general: { rows: [], filtered: [], loaded: 0, total: 0, totalPages: 1, loadingMore: false, filters: {} },
+      backlog: { rows: [], filtered: [], loaded: 0, total: 0, totalPages: 1, loadingMore: false, filters: {} }
+    }
+  };
+
+  function activeConfig() {
+    return CONFIG.MODULES[state.active];
+  }
+
+  function activeState() {
+    return state.modules[state.active];
+  }
+
+  function setStatus(text) {
+    document.getElementById('loadPill').textContent = text;
+  }
+
+  function setProgress(loaded, total, label = '') {
+    const pct = total ? Math.min(100, Math.round((loaded / total) * 100)) : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressText').textContent = label || `${Utils.fmt(loaded)} cargados de ${Utils.fmt(total)}`;
+  }
+
+  function updateHeader(extra = '') {
+    const s = activeState();
+    const cfg = activeConfig();
+    const msg = extra ? ` · ${extra}` : '';
+    document.getElementById('moduleTitle').textContent = cfg.title;
+    document.getElementById('moduleSubtitle').textContent =
+      `${Utils.fmt(s.filtered.length)} visibles · ${Utils.fmt(s.loaded)} cargados de ${Utils.fmt(s.total || s.loaded)} · ${cfg.sheet}${msg}`;
+  }
+
+  function buildFilters() {
+    const s = activeState();
+    const grid = document.getElementById('filtersGrid');
+    const filters = Modules.filters(state.active);
+    grid.innerHTML = filters.map(f => {
+      const values = Utils.countBy(s.rows, f.getter);
+      const current = s.filters[f.id] || 'all';
+      return `
+        <div class="filter-field">
+          <label for="filter-${f.id}">${f.label}</label>
+          <select id="filter-${f.id}" data-filter="${f.id}">
+            <option value="all">${f.all}</option>
+            ${values.map(v => `<option value="${String(v.value).replace(/"/g, '&quot;')}" ${current === v.value ? 'selected' : ''}>${f.format ? f.format(v.value) : v.value} (${Utils.fmt(v.count)})</option>`).join('')}
+          </select>
+        </div>
+      `;
+    }).join('');
+
+    grid.querySelectorAll('select').forEach(sel => {
+      sel.addEventListener('change', () => {
+        s.filters[sel.dataset.filter] = sel.value;
+        applyFilters();
+        render();
+      });
+    });
+  }
+
+  function applyFilters() {
+    const s = activeState();
+    const filters = Modules.filters(state.active);
+    s.filtered = s.rows.filter(row => {
+      return filters.every(f => {
+        const selected = s.filters[f.id] || 'all';
+        if (selected === 'all') return true;
+        return String(f.getter(row)) === selected;
+      });
+    });
+  }
+
+  function renderKpis() {
+    const s = activeState();
+    const loadedText = `${Utils.fmt(s.loaded)} cargados`;
+    const kpis = Modules.kpis(state.active, s.filtered, { loadedText });
+    document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
+      <article class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label">${k.label}</span>
+          <span class="kpi-icon"><i data-lucide="${k.icon}"></i></span>
+        </div>
+        <div class="kpi-value">${k.value}</div>
+        <span class="kpi-sub">${k.sub}</span>
+      </article>
+    `).join('');
+  }
+
+  function renderChartCards() {
+    document.getElementById('chartsGrid').innerHTML = Modules.chartCards(state.active).map(card => `
+      <article class="chart-card ${card.type}">
+        <div class="card-head">
+          <div>
+            <h3>${card.title}</h3>
+            <p>${card.sub}</p>
+          </div>
+          <span class="badge">${activeConfig().sheet}</span>
+        </div>
+        <div class="chart-body">
+          <canvas id="chart-${card.id}"></canvas>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  function renderTable() {
+    const s = activeState();
+    const cols = Modules.tableColumns(state.active, s.filtered);
+    document.getElementById('tableCount').textContent = `${Utils.fmt(s.filtered.length)} registros`;
+    document.getElementById('tableSubtitle').textContent = `Primeros ${Math.min(CONFIG.TABLE_LIMIT, s.filtered.length)} registros visibles`;
+
+    document.getElementById('tableHead').innerHTML = `
+      <tr>${cols.map(c => `<th>${c}</th>`).join('')}<th>Hoja</th></tr>
+    `;
+
+    document.getElementById('tableBody').innerHTML = s.filtered.slice(0, CONFIG.TABLE_LIMIT).map(row => `
+      <tr>
+        ${cols.map(c => {
+          const value = row[c] ?? '';
+          if (Utils.norm(c).includes('status')) {
+            return `<td><span class="status-badge ${Utils.statusClass(value)}">${Utils.statusLabel(value)}</span></td>`;
+          }
+          return `<td>${value}</td>`;
+        }).join('')}
+        <td>${row._sheet || activeConfig().sheet}</td>
+      </tr>
+    `).join('');
+  }
+
+  function render() {
+    const s = activeState();
+    Charts.clearAll();
+    renderKpis();
+    renderChartCards();
+    if (s.filtered.length) Modules.renderCharts(state.active, s.filtered);
+    renderTable();
+    updateHeader(s.loadingMore ? 'cargando en segundo plano' : '');
+    setProgress(s.loaded, s.total || s.loaded, s.loadingMore ? 'Cargando páginas restantes...' : 'Carga lista');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  async function loadInitial(moduleId) {
+    state.active = moduleId;
+    const s = activeState();
+    const cfg = activeConfig();
+
+    setStatus('Cargando');
+    document.getElementById('filtersTitle').textContent = `Filtros · ${cfg.title}`;
+    document.getElementById('filtersSubtitle').textContent = `Fuente: hoja ${cfg.sheet}`;
+
+    if (s.rows.length) {
+      applyFilters();
+      buildFilters();
+      render();
+      return;
+    }
+
+    const [page1, analysis] = await Promise.all([
+      Api.readPage(cfg, 1),
+      Api.analyze(cfg)
+    ]);
+
+    s.rows = page1.rows;
+    s.loaded = s.rows.length;
+    s.totalPages = page1.totalPages;
+    s.total = analysis.success ? Number(analysis.total_rows || page1.total || s.loaded) : page1.total;
+    s.filtered = [...s.rows];
+
+    buildFilters();
+    render();
+    setStatus('Carga inicial lista');
+
+    setTimeout(() => loadRemaining(moduleId), 500);
+  }
+
+  async function loadRemaining(moduleId) {
+    const previousActive = state.active;
+    const s = state.modules[moduleId];
+    const cfg = CONFIG.MODULES[moduleId];
+
+    if (s.loadingMore || s.loaded >= s.total || s.totalPages <= 1) return;
+    s.loadingMore = true;
+
+    try {
+      for (let page = 2; page <= s.totalPages; page++) {
+        const data = await Api.readPage(cfg, page);
+        s.rows.push(...data.rows);
+        s.loaded = s.rows.length;
+
+        if (state.active === moduleId) {
+          applyFilters();
+          buildFilters();
+          render();
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 80));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      s.loadingMore = false;
+      if (state.active === moduleId) {
+        applyFilters();
+        buildFilters();
+        render();
+        setStatus('Completo');
+      }
+      state.active = previousActive;
+    }
+  }
+
+  function switchModule(moduleId) {
+    document.querySelectorAll('.nav-link[data-module]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.module === moduleId);
+    });
+    loadInitial(moduleId);
+    closeMobile();
+  }
+
+  async function refresh() {
+    const moduleId = state.active;
+    state.modules[moduleId] = { rows: [], filtered: [], loaded: 0, total: 0, totalPages: 1, loadingMore: false, filters: {} };
+    Charts.clearAll();
+    await loadInitial(moduleId);
+  }
+
+  function closeMobile() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('mobileOverlay').classList.remove('active');
+  }
+
+  function initEvents() {
+    document.querySelectorAll('.nav-link[data-module]').forEach(btn => {
+      btn.addEventListener('click', () => switchModule(btn.dataset.module));
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', refresh);
+
+    document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+      activeState().filters = {};
+      applyFilters();
+      buildFilters();
+      render();
+    });
+
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.add('open');
+      document.getElementById('mobileOverlay').classList.add('active');
+    });
+
+    document.getElementById('mobileOverlay').addEventListener('click', closeMobile);
+  }
+
+  async function init() {
+    if (window.lucide) lucide.createIcons();
+    initEvents();
+    await loadInitial('general');
+  }
+
+  return { init };
+})();
+
+document.addEventListener('DOMContentLoaded', App.init);

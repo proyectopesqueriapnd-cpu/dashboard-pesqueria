@@ -1,0 +1,79 @@
+const Utils = (() => {
+  function norm(v) {
+    return String(v ?? '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  function fmt(n) {
+    return Number(n || 0).toLocaleString('es-MX');
+  }
+
+  function getVal(row, possibleNames) {
+    const keys = Object.keys(row || {});
+    for (const name of possibleNames) {
+      if (row[name] !== undefined) return row[name];
+      const target = norm(name);
+      const found = keys.find(k => norm(k) === target);
+      if (found) return row[found];
+    }
+    return '';
+  }
+
+  function countBy(rows, getter) {
+    const map = new Map();
+    rows.forEach(row => {
+      const value = String(getter(row) || '').trim();
+      if (value) map.set(value, (map.get(value) || 0) + 1);
+    });
+    return [...map.entries()]
+      .map(([value, count]) => ({ value, count }))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  function sumBy(rows, getter) {
+    return rows.reduce((sum, row) => {
+      const n = Number(String(getter(row) || '0').replace('%', '').replace(',', '.'));
+      return sum + (Number.isFinite(n) ? n : 0);
+    }, 0);
+  }
+
+  function pct(part, total) {
+    return total ? ((part / total) * 100).toFixed(1) : '0.0';
+  }
+
+  function statusLabel(value) {
+    const s = String(value || '').trim();
+    if (!s) return 'Sin dato';
+    if (s.toUpperCase() === 'A') return 'Aprobado';
+    if (s.toUpperCase() === 'P') return 'Pendiente';
+    if (s.toUpperCase() === 'R') return 'Rechazado';
+    if (s.toUpperCase() === 'N') return 'No aplica';
+    if (s.toUpperCase() === 'M') return 'Muestreo';
+    return s;
+  }
+
+  function statusClass(value) {
+    const s = norm(value);
+    if (s === 'a' || s.includes('aprob')) return 'status-a';
+    if (s === 'p' || s.includes('pend')) return 'status-p';
+    if (s === 'r' || s.includes('rech')) return 'status-r';
+    return 'status-o';
+  }
+
+  function short(value, max = 28) {
+    const s = String(value || '');
+    return s.length > max ? s.slice(0, max - 3) + '...' : s;
+  }
+
+  function dateSort(a, b) {
+    const da = new Date(a.value);
+    const db = new Date(b.value);
+    if (Number.isNaN(da.getTime()) || Number.isNaN(db.getTime())) return String(a.value).localeCompare(String(b.value));
+    return da - db;
+  }
+
+  return { norm, fmt, getVal, countBy, sumBy, pct, statusLabel, statusClass, short, dateSort };
+})();

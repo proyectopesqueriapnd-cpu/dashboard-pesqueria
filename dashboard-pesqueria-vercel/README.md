@@ -1,8 +1,3 @@
-# Dashboard PT Pesquería
+# Dashboard PT Pesquería 2.0
 
-Dashboard optimizado para PT usando las columnas filtradas de Hoja 1 y Hoja 2.
-
-## Archivos
-- index.html
-- vercel.json
-- README.md
+Dashboard enfocado únicamente a columnas PT y optimizado para Vercel.

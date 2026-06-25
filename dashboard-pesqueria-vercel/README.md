@@ -1,34 +1,5 @@
-# Control Proyecto Pesquería V4
+# Control Proyecto Pesquería V4 Profesional
 
-Dashboard profesional modular para:
+Módulos independientes GENERAL y BACKLOG PT.
 
-- GENERAL
-- BACKLOG PT
-
-## Estructura
-
-- `index.html`
-- `css/style.css`
-- `js/config.js`
-- `js/api.js`
-- `js/utils.js`
-- `js/charts.js`
-- `js/modules.js`
-- `js/app.js`
-
-## Configuración
-
-El archivo principal de configuración es:
-
-`js/config.js`
-
-Ahí se define:
-
-- URL del Apps Script
-- API KEY
-- hojas
-- columnas por módulo
-
-## Despliegue
-
-Subir a GitHub y Vercel detectará los cambios automáticamente.
+Incluye normalizador para BACKLOG PT cuando la fila 1 es título y la fila 2 contiene encabezados.

@@ -4,17 +4,7 @@ const CONFIG = {
   PAGE_SIZE: 10000,
   TABLE_LIMIT: 500,
   MODULES: {
-    general: {
-      title: 'GENERAL',
-      sheet: 'GENERAL',
-      columns: 'A,B,C,D,H,AE,AF,AG,AH',
-      icon: 'layout-dashboard'
-    },
-    backlog: {
-      title: 'BACKLOG PT',
-      sheet: 'BACKLOG PT',
-      columns: '',
-      icon: 'bar-chart-3'
-    }
+    general: { title: 'GENERAL', sheet: 'GENERAL', columns: 'A,B,C,D,H,AE,AF,AG,AH', icon: 'layout-dashboard' },
+    backlog: { title: 'BACKLOG PT', sheet: 'BACKLOG PT', columns: '', icon: 'bar-chart-3' }
   }
 };
